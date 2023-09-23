@@ -1,27 +1,28 @@
 import threading
 import tkinter as tk
-from pynput import keyboard
+
 import pygame
+from pynput import keyboard
 
 no_sound = False
 
-
-
 disable_key = [
-        keyboard.Key.cmd,  # Windows 键
-        keyboard.Key.f1, keyboard.Key.f2,  keyboard.Key.f3, keyboard.Key.f4, keyboard.Key.f5,  keyboard.Key.f6,
-        keyboard.Key.f7, keyboard.Key.f8,  keyboard.Key.f9, keyboard.Key.f10, keyboard.Key.f12,  keyboard.Key.f11,
-        keyboard.Key.caps_lock,  # 大写锁定键
-        keyboard.Key.ctrl,  # Ctrl 键
-        keyboard.Key.up, keyboard.Key.down, keyboard.Key.left, keyboard.Key.right,  # 上下左右键
-        keyboard.Key.home, keyboard.Key.end, keyboard.Key.page_up, keyboard.Key.page_down,  # Home, End, PageUp, PageDown 键
-        keyboard.Key.print_screen,  # PrintScreen 键
-        keyboard.Key.pause,  # Pause 键
-        keyboard.Key.num_lock, keyboard.Key.scroll_lock,  # NumLock, ScrollLock 键
-        keyboard.Key.esc  # ESC 键
+    keyboard.Key.cmd,  # Windows 键
+    keyboard.Key.f1, keyboard.Key.f2, keyboard.Key.f3, keyboard.Key.f4, keyboard.Key.f5, keyboard.Key.f6,
+    keyboard.Key.f7, keyboard.Key.f8, keyboard.Key.f9, keyboard.Key.f10, keyboard.Key.f12, keyboard.Key.f11,
+    keyboard.Key.caps_lock,  # 大写锁定键
+    keyboard.Key.ctrl,  # Ctrl 键
+    keyboard.Key.up, keyboard.Key.down, keyboard.Key.left, keyboard.Key.right,  # 上下左右键
+    keyboard.Key.home, keyboard.Key.end, keyboard.Key.page_up, keyboard.Key.page_down,  # Home, End, PageUp, PageDown 键
+    keyboard.Key.print_screen,  # PrintScreen 键
+    keyboard.Key.pause,  # Pause 键
+    keyboard.Key.num_lock, keyboard.Key.scroll_lock,  # NumLock, ScrollLock 键
+    keyboard.Key.esc  # ESC 键
 ]
 ji = {}
 n = None
+
+
 # 定义回调函数，在按键按下时执行
 def on_press(key):
     if key in disable_key or no_sound:
@@ -37,8 +38,10 @@ def on_press(key):
             pygame.mixer.music.load(r'C:\Users\nanocode38\Music\KeyBoard.mp3')
             pygame.mixer.music.play()
 
+
 def out(key):
     ji[key] = False
+
 
 # 创建监听器
 listener = keyboard.Listener(on_press=on_press, on_release=out)
@@ -47,9 +50,9 @@ listener_thread = threading.Thread(target=listener.start)
 listener_thread.daemon = True  # 将监听器线程设置为守护进程
 listener_thread.start()
 
-def loudspeaker_mute():
-    global no_sound
-    no_sound = not no_sound
+
+
+
 
 root = tk.Tk()
 root.overrideredirect(1)
@@ -58,7 +61,6 @@ root.wm_attributes('-toolwindow', True)
 root.wm_attributes('-topmost', True)
 root.geometry('210x25+400+500')
 root.update()
-
 
 
 def start_move(event):
@@ -89,10 +91,29 @@ move_button.bind("<ButtonPress-1>", start_move)
 move_button.bind("<ButtonRelease-1>", stop_move)
 move_button.pack(side='left')
 
+# def change_image():
+#     if image_var.get() == 0:
+#         sound_button.config(image=sound_image)
+#         image_var.set(1)
+#     else:
+#         sound_button.config(image=sound)
+#         image_var.set(0)
 
-image = tk.PhotoImage(file = r".\images\sound_button.png")
-image = image.subsample(1, 1)
 
-sound_button = tk.Button(root, image=image, command=loudspeaker_mute)
+sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
+sound_image = sound_image.subsample(1, 1)
+
+no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
+no_sound_image = no_sound_image.subsample(1, 1)
+
+def loudspeaker_mute():
+    global no_sound
+    no_sound = not no_sound
+    if no_sound:
+        sound_button.config(image=no_sound_image)
+    else:
+        sound_button.config(image=sound_image)
+
+sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute)
 sound_button.pack(side='right')
 root.mainloop()
