@@ -1,4 +1,5 @@
 # Sound Keyboard
+- [Endlish version 英文版本](./README.md)
 
 ## 简介
 有声键盘是一个简单的软件, 此软件由Python实现, 使用到了pygame, tkinter, pynput等一些库.
