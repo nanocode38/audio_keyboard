@@ -10,6 +10,7 @@ import pygame
 from pynput import keyboard
 from pynput.keyboard import Key
 
+launcher = 'Chinese'
 
 disable_key = [
     Key.cmd,  # Windows 键
@@ -27,6 +28,36 @@ disable_key = [
     Key.media_volume_mute, Key.media_volume_down, Key.media_volume_up, # 音量增减键
     Key.shift, Key.shift_r, Key.shift_l,  # Shift键
 ]
+
+launcher_key = {
+    'Chinese':[
+        '键盘音频文件设置:',
+        '此文件不是音频文件',
+        '此路径不是文件',
+        '退出系统',
+        '确定',
+        '关于',
+        '设置',
+        '英语English',
+        """音效键盘系统
+属于: nanocode38 Copyright(C)
+官方网站: https://github.com/nanocode38/audio_keyboard"""
+
+    ],
+    'English':[
+        'Keyboard audio file settings:',
+        'This file is not an audio file',
+        'This path is not a file',
+        'Exit System',
+        'OK',
+        'About',
+        'Settings',
+        'Chinese中文',
+        """Sound keyboard system
+Subject to: nanocode38 Copyright (C)
+Official website: https://github.com/nanocode38/audio_keyboard"""
+    ]
+}
 
 continuous_button = {
     Key.ctrl_l: False,
@@ -98,17 +129,49 @@ listener_thread = threading.Thread(target=listener.start)
 listener_thread.daemon = True  # 将监听器线程设置为守护进程
 listener_thread.start()
 
+def get_new_main_root():
+    global root, sound_image, about_button, exit_button, move_button, settings_button, sound_button, settings_image
+    global launcher_key, launcher, no_sound, no_sound_image, sound_image, get_about, getsettings, _exit, exit_image
+    root = tk.Tk()
+    root.overrideredirect(1)
+    root.wm_attributes('-alpha', 0.8)
+    root.wm_attributes('-toolwindow', True)
+    root.wm_attributes('-topmost', True)
+    root.geometry('210x25+400+500')
+    root.update()
 
+    sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
 
+    no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
 
+    settings_image = tk.PhotoImage(file=r'.\images\settings.png')
 
-root = tk.Tk()
-root.overrideredirect(1)
-root.wm_attributes('-alpha', 0.8)
-root.wm_attributes('-toolwindow', True)
-root.wm_attributes('-topmost', True)
-root.geometry('210x25+400+500')
-root.update()
+    exit_image = tk.PhotoImage(file=r'.\images\exit.png')
+
+    about_button = tk.Button(root, text=launcher_key[launcher][5], command=get_about)
+    about_button.place(x=120, y=0)
+
+    settings_button = tk.Button(root, image=settings_image, command=getsettings)
+    settings_button.pack()
+
+    exit_button = tk.Button(root, image=exit_image, command=_exit)
+    exit_button.place(x=40, y=0)
+
+    move_button = tk.Button(root)
+    # 绑定按下和松开事件
+    move_button.bind("<ButtonPress-1>", start_move)
+    move_button.bind("<ButtonRelease-1>", stop_move)
+    move_button.bind("<B1-Motion>", on_motion)
+    move_button.place(x=-1, y=0)
+
+    if no_sound:
+        sound_button = tk.Button(root, image=no_sound_image, command=loudspeaker_mute)
+    else:
+        sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute)
+    sound_button.place(x=180, y=-2)
+
+    root.mainloop()
+
 
 
 def start_move(event):
@@ -131,48 +194,31 @@ def on_motion(event):
     root.update()
 
 
-root.bind("<B1-Motion>", on_motion)
-
-move_button = tk.Button(root)
-# 绑定按下和松开事件
-move_button.bind("<ButtonPress-1>", start_move)
-move_button.bind("<ButtonRelease-1>", stop_move)
-move_button.pack(side='left')
-
-
-sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
-
-no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
-
-settings_image = tk.PhotoImage(file=r'.\images\settings.png')
-
-exit_image = tk.PhotoImage(file=r'.\images\exit.png')
 
 def loudspeaker_mute():
     global no_sound
     no_sound = not no_sound
     if no_sound:
-        pygame.mixer.music.stop()
+        try:
+            pygame.mixer.music.stop()
+        except pygame.error:
+            pass
         sound_button.config(image=no_sound_image)
     else:
         sound_button.config(image=sound_image)
 
-if no_sound:
-    sound_button = tk.Button(root, image=no_sound_image, command=loudspeaker_mute)
-else:
-    sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute)
-sound_button.pack(side='right')
+
 
 def getsettings():
     global sounds_path
     sroot = tk.Tk()
-    sroot.title('设置')
+    sroot.title(launcher_key[launcher][6])
     sroot.wm_attributes('-alpha', 0.8)
     sroot.wm_attributes('-topmost', True)
     sroot.geometry('400x360+300+250')
     sroot.iconbitmap(r'./images/Logo.ico')
 
-    label = tk.Label(sroot, text="键盘音频文件设置:")
+    label = tk.Label(sroot, text=launcher_key[launcher][0])
     label.grid(row=0, column=0)
 
     path_entry = tk.Entry(sroot, bd=3, width=51)
@@ -189,7 +235,7 @@ def getsettings():
         if f_path != '':
             if os.path.splitext(f_path)[1] not in ('.mp3', '.wav'):
                 from tkinter import messagebox
-                messagebox.showerror(title='File Error', message='此文件不是音频文件')
+                messagebox.showerror(title='File Error', message=launcher_key[launcher][1])
             else:
                 sounds_path = f_path
                 path_entry.delete(0, tk.END)
@@ -202,31 +248,91 @@ def getsettings():
             if f_path != '':
                 if not os.path.isfile(f_path):
                     from tkinter import messagebox
-                    messagebox.showerror(title='File Error', message='此路径不是文件')
+                    messagebox.showerror(title='File Error', message=launcher_key[launcher][2])
                 elif os.path.splitext(f_path)[1] not in ('.mp3', '.wav'):
                     from tkinter import messagebox
-                    messagebox.showerror(title='File Error', message='此文件不是音频文件')
+                    messagebox.showerror(title='File Error', message=launcher_key[launcher][1])
                 else:
                     sounds_path = f_path
         sroot.destroy()
 
     path_button = tk.Button(sroot, text='. . .', command=get_message)
-    ok_button = tk.Button(sroot, text='确定', command=s)
+    ok_button = tk.Button(sroot, text=launcher_key[launcher][4], command=s)
     path_button.place(x=370, y=25)
     ok_button.place(x=10, y=59)
 
-    exit_button = tk.Button(sroot, text='退出系统', command=_exit)
+    exit_button = tk.Button(sroot, text=launcher_key[launcher][3], command=_exit)
     exit_button.place(x=250, y=100)
+
+    def launcher_k():
+        global root
+        global launcher
+        if launcher == 'Chinese':
+            launcher = 'English'
+        else:
+            launcher = 'Chinese'
+        root.destroy()
+        sroot.destroy()
+        get_new_main_root()
+
+    launcher_button = tk.Button(sroot, text=launcher_key[launcher][7], command=launcher_k)
+    launcher_button.place(x=100, y=200)
 
 
     sroot.update()
     sroot.mainloop()
 
 
+def get_about():
+    sroot = tk.Tk()
+    sroot.title(launcher_key[launcher][5])
+    sroot.wm_attributes('-alpha', 0.8)
+    sroot.wm_attributes('-topmost', True)
+    sroot.geometry('400x360+300+250')
+    sroot.iconbitmap(r'./images/Logo.ico')
+
+    about_text = launcher_key[launcher][8]
+
+    label = tk.Label(sroot, text=about_text)
+    label.grid(row=0, column=0)
+
+
+root = tk.Tk()
+root.overrideredirect(1)
+root.wm_attributes('-alpha', 0.8)
+root.wm_attributes('-toolwindow', True)
+root.wm_attributes('-topmost', True)
+root.geometry('210x25+400+500')
+root.update()
+
+sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
+
+no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
+
+settings_image = tk.PhotoImage(file=r'.\images\settings.png')
+
+exit_image = tk.PhotoImage(file=r'.\images\exit.png')
+
+about_button = tk.Button(root, text=launcher_key[launcher][5], command=get_about)
+about_button.place(x=120, y=0)
+
 settings_button = tk.Button(root, image=settings_image, command=getsettings)
 settings_button.pack()
 
 exit_button = tk.Button(root, image=exit_image, command=_exit)
 exit_button.place(x=40, y=0)
+
+move_button = tk.Button(root)
+# 绑定按下和松开事件
+move_button.bind("<ButtonPress-1>", start_move)
+move_button.bind("<ButtonRelease-1>", stop_move)
+move_button.bind("<B1-Motion>", on_motion)
+move_button.place(x=-1, y=0)
+
+if no_sound:
+    sound_button = tk.Button(root, image=no_sound_image, command=loudspeaker_mute)
+else:
+    sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute)
+sound_button.place(x=180, y=-2)
 
 root.mainloop()
