@@ -10,9 +10,7 @@ import pygame
 from pynput import keyboard
 from pynput.keyboard import Key
 
-launcher = 'Chinese'
-
-disable_key = [
+DISABLE_KEY = [
     Key.cmd,  # Windows 键
     Key.f1, Key.f2, Key.f3, Key.f4, Key.f5, Key.f6,
     Key.f7, Key.f8, Key.f9, Key.f10, Key.f12, Key.f11,
@@ -29,35 +27,44 @@ disable_key = [
     Key.shift, Key.shift_r, Key.shift_l,  # Shift键
 ]
 
-launcher_key = {
-    'Chinese':[
-        '键盘音频文件设置:',
-        '此文件不是音频文件',
-        '此路径不是文件',
-        '退出系统',
-        '确定',
-        '关于',
-        '设置',
-        '英语English',
-        """音效键盘系统
+LANGUAGE_LIST = {
+    'Chinese':{
+        'sounds set':'键盘音频文件设置:',
+        'not sounds':'此文件不是音频文件',
+        'not file':'此路径不是文件',
+        'exit':'退出系统',
+        'ok':'确 定',
+        'about':'关于',
+        'set':'设置',
+        'lau':'英语English',
+        'about str':"""音效键盘系统
 属于: nanocode38 Copyright(C)
-官方网站: https://github.com/nanocode38/audio_keyboard"""
-
-    ],
+官方网站: https://github.com/nanocode38/audio_keyboard""",
+        'calc':'取 消',
+},
     'English':[
         'Keyboard audio file settings:',
         'This file is not an audio file',
         'This path is not a file',
         'Exit System',
-        'OK',
+        'O K',
         'About',
         'Settings',
         'Chinese中文',
         """Sound keyboard system
 Subject to: nanocode38 Copyright (C)
-Official website: https://github.com/nanocode38/audio_keyboard"""
+Official website: https://github.com/nanocode38/audio_keyboard""",
+        'Cancel',
     ]
 }
+
+e = {}
+i = 0
+for key in LANGUAGE_LIST['Chinese'].keys():
+    e[key] = LANGUAGE_LIST['English'][i]
+    i += 1
+LANGUAGE_LIST['English'] = e
+del e, i
 
 continuous_button = {
     Key.ctrl_l: False,
@@ -75,21 +82,23 @@ continuous_button = {
 }
 
 home_path = Path.home()
-if not os.path.isdir(home_path / 'sKeyBoard'):
-    os.mkdir(home_path / 'sKeyBoard')
+if not os.path.isdir(home_path / 'AudioKeyBoard') or \
+        not os.path.isfile(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat'):
+    os.mkdir(home_path / 'AudioKeyBoard')
     no_sound = False
     sounds_path = r'.\sounds\KeyBoard.mp3'
+    language = 'Chinese'
 else:
-    with open(home_path / 'sKeyBoard' / 'sounds_data.dat', 'rb') as f:
+    with open(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat', 'rb') as f:
         sounds_path = str(pickle.load(f))
-    with open(home_path / 'sKeyBoard' / 'no_data.dat', 'rb') as f:
+        language = str(pickle.load(f))
         no_sound = bool(pickle.load(f))
 
 def _exit():
     global sounds_path, no_sound
-    with open(home_path / 'sKeyBoard' / 'sounds_data.dat', 'wb') as f:
+    with open(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat', 'wb') as f:
         pickle.dump(sounds_path, f)
-    with open(home_path / 'sKeyBoard' / 'no_data.dat', 'wb') as f:
+        pickle.dump(language, f)
         pickle.dump(no_sound, f)
     exit(0)
 
@@ -111,7 +120,7 @@ def on_press(key):
     finally:
         if not continuous_button[key]:
             continuous_button[key] = True
-            if key in disable_key or no_sound:
+            if key in DISABLE_KEY or no_sound:
                 return
             pygame.mixer.init()
             pygame.mixer.music.load(sounds_path)
@@ -131,7 +140,7 @@ listener_thread.start()
 
 def get_new_main_root():
     global root, sound_image, about_button, exit_button, move_button, settings_button, sound_button, settings_image
-    global launcher_key, launcher, no_sound, no_sound_image, sound_image, get_about, getsettings, _exit, exit_image
+    global LANGUAGE_LIST, language, no_sound, no_sound_image, sound_image, get_about, get_settings, _exit, exit_image
     root = tk.Tk()
     root.overrideredirect(1)
     root.wm_attributes('-alpha', 0.8)
@@ -148,10 +157,12 @@ def get_new_main_root():
 
     exit_image = tk.PhotoImage(file=r'.\images\exit.png')
 
-    about_button = tk.Button(root, text=launcher_key[launcher][5], command=get_about)
+    # logo_image = tk.PhotoImage(file=r'.\images\Logo.ico
+
+    about_button = tk.Button(root, text=LANGUAGE_LIST[language]['about'], command=get_about)
     about_button.place(x=120, y=0)
 
-    settings_button = tk.Button(root, image=settings_image, command=getsettings)
+    settings_button = tk.Button(root, image=settings_image, command=get_settings)
     settings_button.pack()
 
     exit_button = tk.Button(root, image=exit_image, command=_exit)
@@ -209,19 +220,20 @@ def loudspeaker_mute():
 
 
 
-def getsettings():
-    global sounds_path
-    sroot = tk.Tk()
-    sroot.title(launcher_key[launcher][6])
-    sroot.wm_attributes('-alpha', 0.8)
-    sroot.wm_attributes('-topmost', True)
-    sroot.geometry('400x360+300+250')
-    sroot.iconbitmap(r'./images/Logo.ico')
+def get_settings():
+    global sounds_path, LANGUAGE_LIST, language
+    global root
+    settings_windows = tk.Toplevel(root)
+    settings_windows.title(LANGUAGE_LIST[language]['set'])
+    settings_windows.wm_attributes('-alpha', 0.8)
+    settings_windows.wm_attributes('-topmost', True)
+    settings_windows.geometry('400x360+300+250')
+    settings_windows.iconbitmap(r'./images/Logo.ico')
 
-    label = tk.Label(sroot, text=launcher_key[launcher][0])
+    label = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['sounds set'])
     label.grid(row=0, column=0)
 
-    path_entry = tk.Entry(sroot, bd=3, width=51)
+    path_entry = tk.Entry(settings_windows, bd=3, width=51)
     path_entry.insert(0, sounds_path)
     path_entry.place(x=1, y=30)
 
@@ -235,70 +247,73 @@ def getsettings():
         if f_path != '':
             if os.path.splitext(f_path)[1] not in ('.mp3', '.wav'):
                 from tkinter import messagebox
-                messagebox.showerror(title='File Error', message=launcher_key[launcher][1])
+                messagebox.showerror(title='File Error', message=LANGUAGE_LIST[language]['not sounds'])
             else:
                 sounds_path = f_path
                 path_entry.delete(0, tk.END)
                 path_entry.insert(0, f_path)
 
-    def s():
+    def ok():
         global sounds_path
         if not get:
             f_path = path_entry.get()
             if f_path != '':
                 if not os.path.isfile(f_path):
                     from tkinter import messagebox
-                    messagebox.showerror(title='File Error', message=launcher_key[launcher][2])
+                    messagebox.showerror(title='File Error', message=LANGUAGE_LIST[language]['not file'])
                 elif os.path.splitext(f_path)[1] not in ('.mp3', '.wav'):
                     from tkinter import messagebox
-                    messagebox.showerror(title='File Error', message=launcher_key[launcher][1])
+                    messagebox.showerror(title='File Error', message=LANGUAGE_LIST[language]['no sounds'])
                 else:
                     sounds_path = f_path
-        sroot.destroy()
+        settings_windows.destroy()
 
-    path_button = tk.Button(sroot, text='. . .', command=get_message)
-    ok_button = tk.Button(sroot, text=launcher_key[launcher][4], command=s)
+    path_button = tk.Button(settings_windows, text='. . .', command=get_message)
+    ok_button = tk.Button(settings_windows, width=10, text=LANGUAGE_LIST[language]['ok'], command=ok)
+    no_button = tk.Button(settings_windows, width=10, text=LANGUAGE_LIST[language]['calc'],
+                          command=settings_windows.destroy)
     path_button.place(x=370, y=25)
-    ok_button.place(x=10, y=59)
+    ok_button.place(x=250, y=330)
+    no_button.place(x=320, y=330)
 
-    exit_button = tk.Button(sroot, text=launcher_key[launcher][3], command=_exit)
+    exit_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['exit'], command=_exit)
     exit_button.place(x=250, y=100)
 
-    def launcher_k():
+    def changing_over_language():
         global root
-        global launcher
-        if launcher == 'Chinese':
-            launcher = 'English'
+        global language
+        if language == 'Chinese':
+            language = 'English'
         else:
-            launcher = 'Chinese'
+            language = 'Chinese'
         root.destroy()
-        sroot.destroy()
         get_new_main_root()
 
-    launcher_button = tk.Button(sroot, text=launcher_key[launcher][7], command=launcher_k)
-    launcher_button.place(x=100, y=200)
+    language_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['lau'], command=changing_over_language)
+    language_button.place(x=100, y=200)
 
 
-    sroot.update()
-    sroot.mainloop()
+    settings_windows.update()
+    settings_windows.mainloop()
 
 
 def get_about():
-    sroot = tk.Tk()
-    sroot.title(launcher_key[launcher][5])
-    sroot.wm_attributes('-alpha', 0.8)
-    sroot.wm_attributes('-topmost', True)
-    sroot.geometry('400x360+300+250')
-    sroot.iconbitmap(r'./images/Logo.ico')
+    global root, language, LANGUAGE_LIST
+    about_windows = tk.Toplevel(root)
+    about_windows.title(LANGUAGE_LIST[language]['about'])
+    about_windows.wm_attributes('-alpha', 0.8)
+    about_windows.wm_attributes('-topmost', True)
+    about_windows.geometry('400x360+300+250')
+    about_windows.iconbitmap(r'./images/Logo.ico')
 
-    about_text = launcher_key[launcher][8]
+    about_text = LANGUAGE_LIST[language]['about str']
 
-    label = tk.Label(sroot, text=about_text)
+    label = tk.Label(about_windows, text=about_text)
     label.grid(row=0, column=0)
 
 
 root = tk.Tk()
-root.overrideredirect(1)
+root.overrideredirect(True)
 root.wm_attributes('-alpha', 0.8)
 root.wm_attributes('-toolwindow', True)
 root.wm_attributes('-topmost', True)
@@ -313,10 +328,10 @@ settings_image = tk.PhotoImage(file=r'.\images\settings.png')
 
 exit_image = tk.PhotoImage(file=r'.\images\exit.png')
 
-about_button = tk.Button(root, text=launcher_key[launcher][5], command=get_about)
+about_button = tk.Button(root, text=LANGUAGE_LIST[language]['about'], command=get_about)
 about_button.place(x=120, y=0)
 
-settings_button = tk.Button(root, image=settings_image, command=getsettings)
+settings_button = tk.Button(root, image=settings_image, command=get_settings)
 settings_button.pack()
 
 exit_button = tk.Button(root, image=exit_image, command=_exit)
