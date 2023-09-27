@@ -9,14 +9,6 @@
 
 **2. 不需要下载Python，直接运行main.exe即可**
 
-效果如图：
-
-![预览](images/preview.png)
-
-![预览](images/preview-1.png)
-
-*注：Sound Keyboard允许自定义键盘声音文件*
-
 ## 打赏
 
-*非常抱歉，打赏码已过期，请考虑以后再进行打赏*
+![Preview](images\support.png)

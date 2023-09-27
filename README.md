@@ -9,11 +9,6 @@ Sound Keyboard is a simple software implemented in Python. It utilizes libraries
 
 **2. Run main.exe directly without downloading Python**
 
-Preview:
-
-![Preview](images/preview.png)
-
-![Preview](images/previewEN.png)
 
 *Note: Sound Keyboard allows customization of keyboard sound files*
 
