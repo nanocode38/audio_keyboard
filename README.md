@@ -14,4 +14,9 @@ Sound Keyboard is a simple software implemented in Python. It utilizes libraries
 
 ## Donation
 
-![Preview](https://github.com/nanocode38/)
+<!-- ![Preview](https://github.com/nanocode38/audio_keyboard/blob/master/images/support.png) -->
+
+<p align="left">
+<a target="blank"><img align="center" src="./images/support.png" alt="nanocode38" height="500" width="500" /></a>
+<p>
+</p>
