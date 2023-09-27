@@ -11,4 +11,7 @@
 
 ## 打赏
 
-![Preview](images\support.png)
+<p align="left">
+<a target="blank"><img align="center" src="./images/support.png" alt="nanocode38" height="500" width="500" /></a>
+<p>
+</p>
