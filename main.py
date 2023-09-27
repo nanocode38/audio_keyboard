@@ -257,15 +257,11 @@ def get_settings():
         global get, language
         get = True
         from tkinter import filedialog
-        f_path = filedialog.askopenfilename(title='Open Sounds File')
+        f_path = filedialog.askopenfilename(title='Open Sounds File', filetypes=[('Sounds', '*.mp3 *.wav')])
         if f_path != '':
-            if os.path.splitext(f_path)[1] not in ('.mp3', '.wav'):
-                from tkinter import messagebox
-                messagebox.showerror(title='File Error', message=LANGUAGE_LIST[language]['not sounds'])
-            else:
-                sounds_path = f_path
-                path_entry.delete(0, tk.END)
-                path_entry.insert(0, f_path)
+            sounds_path = f_path
+            path_entry.delete(0, tk.END)
+            path_entry.insert(0, f_path)
 
     old_language = language
     newlanguage = tk.StringVar()
