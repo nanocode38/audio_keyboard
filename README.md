@@ -14,4 +14,4 @@ Sound Keyboard is a simple software implemented in Python. It utilizes libraries
 
 ## Donation
 
-![Preview](images\support.png)
+![Preview](https://github.com/nanocode38/)
