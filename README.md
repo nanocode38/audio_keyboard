@@ -1,5 +1,5 @@
 # Sound Keyboard
-- [Chinese version 中文版本](./README-CH.md)
+- [Chinese Version 中文版本](./README-CH.md)
 
 ## Introduction
 Sound Keyboard is a simple software implemented in Python. It utilizes libraries such as pygame, tkinter, pynput, etc.
@@ -11,12 +11,12 @@ Sound Keyboard is a simple software implemented in Python. It utilizes libraries
 
 Preview:
 
-![Preview](image.png)
+![Preview](images/preview.png)
 
-![Preview](image-1.png)
+![Preview](images/previewEN.png)
 
 *Note: Sound Keyboard allows customization of keyboard sound files*
 
 ## Donation
 
-*Sorry, the donation code has expired. Please consider donating later*
+![Preview](images\support.png)
