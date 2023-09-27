@@ -45,7 +45,10 @@ LANGUAGE_LIST = {
 """,
         'calc':'取 消',
         'language text': '语言设置(Language):',
-        'reset': '恢复原路径'
+        'reset': '恢复原路径',
+        'black mode': '深色模式',
+        'white mode': '灯光模式',
+        'mode title': '主题'
 },
     'English':[
         'Keyboard audio file settings:',
@@ -63,7 +66,10 @@ Sponsorship:
 """,
         'Cancel',
         'Language(语言设置):',
-        'recover'
+        'recover',
+        'Dark mode',
+        'Light mode',
+        'Theme',
     ]
 }
 
@@ -94,24 +100,42 @@ continuous_button = {
 home_path = Path.home()
 if not os.path.isdir(home_path / 'AudioKeyBoard') or \
         not os.path.isfile(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat'):
-    os.mkdir(home_path / 'AudioKeyBoard')
+    try:
+        os.mkdir(home_path / 'AudioKeyBoard')
+    except FileExistsError:
+        pass
     no_sound = False
     sounds_path = r'.\sounds\KeyBoard.mp3'
     language = 'Chinese'
+    theme = 'black'
+    theme_color = 'white'
 else:
     with open(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat', 'rb') as f:
         sounds_path = str(pickle.load(f))
         language = str(pickle.load(f))
         no_sound = bool(pickle.load(f))
+        theme = str(pickle.load(f))
+        if theme == 'white':
+            theme_color = 'black'
+        elif theme == 'black':
+            theme_color = 'white'
 
 
 sounds_path = os.path.abspath(sounds_path)
+
+def update_theme():
+    global theme, theme_color
+    if theme == 'black':
+        theme_color = 'white'
+    else:
+        theme_color = 'black'
 def _exit():
-    global sounds_path, no_sound
+    global sounds_path, no_sound, theme
     with open(home_path / 'AudioKeyBoard' / 'audio_keyboard_data.dat', 'wb') as f:
         pickle.dump(sounds_path, f)
         pickle.dump(language, f)
         pickle.dump(no_sound, f)
+        pickle.dump(theme, f)
     exit(0)
 
 # 定义回调函数，在按键按下时执行
@@ -154,9 +178,10 @@ listener_thread.start()
 def get_new_main_root(isnooroot=True):
     global root, sound_image, about_button, exit_button, move_button, settings_image
     global LANGUAGE_LIST, language, no_sound, no_sound_image, sound_image, get_about
-    global logo, get_settings, _exit, exit_image, settings_button, sound_button
+    global logo, get_settings, _exit, exit_image, settings_button, sound_button, theme, theme_color
     if isnooroot:
         root = tk.Tk()
+    root.configure(background=theme)
     root.overrideredirect(True)
     root.wm_attributes('-alpha', 0.7)
     root.wm_attributes('-toolwindow', True)
@@ -164,20 +189,27 @@ def get_new_main_root(isnooroot=True):
     root.geometry('175x25+500+600')
     root.update()
 
-    sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
-    no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
-    settings_image = tk.PhotoImage(file=r'.\images\settings.png')
+    if theme == 'white':
+        sound_image = tk.PhotoImage(file=r".\images\sound_button.png")
+        no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button.png")
+        settings_image = tk.PhotoImage(file=r'.\images\settings.png')
+    else:
+        sound_image = tk.PhotoImage(file=r".\images\sound_button black.png")
+        no_sound_image = tk.PhotoImage(file=r".\images\no_sound_button black.png")
+        settings_image = tk.PhotoImage(file=r'.\images\settings black.png')
     exit_image = tk.PhotoImage(file=r'.\images\exit.png')
     logo_image = tk.PhotoImage(file=r'.\images\logo.png')
 
 
-    settings_button = tk.Button(root, image=settings_image, command=get_settings)
+    settings_button = tk.Button(root, image=settings_image, command=get_settings, bg=theme, fg=theme_color, 
+                    activebackground=theme, activeforeground=theme)
     settings_button.place(x=10, y=0)
 
-    exit_button = tk.Button(root, image=exit_image, command=_exit)
+    exit_button = tk.Button(root, image=exit_image, command=_exit, bg=theme, fg=theme_color,
+                            activebackground=theme, activeforeground=theme)
     exit_button.place(x=39, y=0)
 
-    move_button = tk.Button(root)
+    move_button = tk.Button(root, bg=theme, fg=theme_color, activebackground=theme, activeforeground=theme)
     # 绑定按下和松开事件
     move_button.bind("<ButtonPress-1>", start_move)
     move_button.bind("<ButtonRelease-1>", stop_move)
@@ -185,12 +217,12 @@ def get_new_main_root(isnooroot=True):
     move_button.place(x=-1, y=0)
 
     if no_sound:
-        sound_button = tk.Button(root, image=no_sound_image, command=loudspeaker_mute)
+        sound_button = tk.Button(root, image=no_sound_image, command=loudspeaker_mute, bg=theme, fg=theme_color, activebackground=theme, activeforeground=theme)
     else:
-        sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute)
+        sound_button = tk.Button(root, image=sound_image, command=loudspeaker_mute, bg=theme, fg=theme_color, activebackground=theme, activeforeground=theme)
     sound_button.place(x=110, y=-1)
 
-    logo = tk.Button(root, image=logo_image, command=get_about)
+    logo = tk.Button(root, image=logo_image, command=get_about, bg=theme, fg=theme_color, activebackground=theme, activeforeground=theme)
     logo.place(x=146, y=-3)
 
     root.mainloop()
@@ -234,18 +266,19 @@ def loudspeaker_mute():
 
 def get_settings():
     global sounds_path, LANGUAGE_LIST
-    global root, language
+    global root, language, theme, theme_color
     settings_windows = tk.Toplevel(root)
+    settings_windows.configure(background=theme)
     settings_windows.title(LANGUAGE_LIST[language]['set'])
     settings_windows.wm_attributes('-alpha', 0.8)
     settings_windows.wm_attributes('-topmost', True)
     settings_windows.geometry('400x360+300+250')
     settings_windows.iconbitmap(r'./images/Logo.ico')
 
-    label = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['sounds set'])
+    label = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['sounds set'], bg=theme, fg=theme_color)
     label.grid(row=0, column=0)
 
-    path_entry = tk.Entry(settings_windows, bd=3, width=51)
+    path_entry = tk.Entry(settings_windows, bd=3, width=51, bg=theme, fg=theme_color)
     if sounds_path[1] != ':':
         path_entry.insert(0, sounds_path)
     else:
@@ -254,7 +287,7 @@ def get_settings():
     get = False
     def get_message():
         global sounds_path, LANGUAGE_LIST
-        global get, language
+        global get, language, theme
         get = True
         from tkinter import filedialog
         f_path = filedialog.askopenfilename(title='Open Sounds File', filetypes=[('Sounds', '*.mp3 *.wav')])
@@ -264,11 +297,16 @@ def get_settings():
             path_entry.insert(0, f_path)
 
     old_language = language
+    old_theme = theme
+    new_theme = tk.StringVar()
+    new_theme.set(theme)
     newlanguage = tk.StringVar()
     newlanguage.set(old_language)
     def ok():
-        global sounds_path, language
+        global sounds_path, language, theme
         language = newlanguage.get()
+        theme = new_theme.get()
+        update_theme()
         if not get:
             f_path = path_entry.get()
             if f_path != '':
@@ -281,17 +319,20 @@ def get_settings():
                 else:
                     sounds_path = f_path
 
-            if old_language != language:
+            if old_language != language or old_theme != theme:
                 root.destroy()
                 get_new_main_root()
 
             else:
                 settings_windows.destroy()
 
-    path_button = tk.Button(settings_windows, text='. . .', command=get_message)
-    ok_button = tk.Button(settings_windows, width=10, text=LANGUAGE_LIST[language]['ok'], command=ok)
+    path_button = tk.Button(settings_windows, text='. . .', command=get_message, bg=theme, fg=theme_color,
+                            activebackground=theme, activeforeground=theme)
+    ok_button = tk.Button(settings_windows, width=10, text=LANGUAGE_LIST[language]['ok'], command=ok, bg=theme,
+                          fg=theme_color, activebackground=theme, activeforeground=theme)
     no_button = tk.Button(settings_windows, width=10, text=LANGUAGE_LIST[language]['calc'],
-                          command=settings_windows.destroy)
+            command=settings_windows.destroy, bg=theme, fg=theme_color, activebackground=theme,
+                          activeforeground=theme)
     path_button.place(x=370, y=25)
     ok_button.place(x=250, y=330)
     no_button.place(x=320, y=330)
@@ -303,21 +344,37 @@ def get_settings():
         path_entry.delete(0, tk.END)
         path_entry.insert(0, s_path)
 
-    exit_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['exit'], command=_exit)
+    exit_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['exit'], command=_exit, bg=theme,
+                            fg=theme_color, activebackground=theme, activeforeground=theme)
     exit_button.place(x=10, y=330)
 
-    reset_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['reset'], command=reset)
+    reset_button = tk.Button(settings_windows, text=LANGUAGE_LIST[language]['reset'], command=reset, bg=theme,
+                             fg=theme_color, activebackground=theme, activeforeground=theme)
     reset_button.place(x=10, y=55)
 
 
-    la_text = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['language text'])
+    la_text = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['language text'], bg=theme, fg=theme_color)
     la_text.place(x=5, y=100)
-    chinese_radiobutton = tk.Radiobutton(settings_windows, text='简体中文', variable=newlanguage, value='Chinese')
-    english_radiobutton = tk.Radiobutton(settings_windows, text='English(USA)', variable=newlanguage, value='English')
+    chinese_radiobutton = tk.Radiobutton(settings_windows, text='简体中文', variable=newlanguage, value='Chinese',
+                                         bg=theme, fg=theme_color, activebackground=theme, activeforeground=theme,
+                                         selectcolor=theme)
+    english_radiobutton = tk.Radiobutton(settings_windows, text='English(USA)', variable=newlanguage,
+                                         value='English', bg=theme, fg=theme_color, activebackground=theme,
+                                         activeforeground=theme, selectcolor=theme)
     chinese_radiobutton.place(x=50, y=130)
     english_radiobutton.place(x=50, y=160)
 
+    la_text = tk.Label(settings_windows, text=LANGUAGE_LIST[language]['mode title'], bg=theme, fg=theme_color)
+    la_text.place(x=5, y=190)
 
+    black_radiobutton = tk.Radiobutton(settings_windows, text=LANGUAGE_LIST[language]['black mode'],
+                                       variable=new_theme, value='black', bg=theme, fg=theme_color,
+                                       activebackground=theme, activeforeground=theme_color, selectcolor=theme)
+    white_radiobutton = tk.Radiobutton(settings_windows, text=LANGUAGE_LIST[language]['white mode'],
+                                       variable=new_theme, value='white', bg=theme, fg=theme_color,
+                                       activebackground=theme, activeforeground=theme_color, selectcolor=theme)
+    black_radiobutton.place(x=50, y=220)
+    white_radiobutton.place(x=50, y=250)
 
     settings_windows.update()
     settings_windows.mainloop()
@@ -326,6 +383,7 @@ def get_settings():
 def get_about():
     global root, language, LANGUAGE_LIST
     about_windows = tk.Toplevel(root)
+    about_windows.configure(bg=theme)
     about_windows.title(LANGUAGE_LIST[language]['about title'])
     about_windows.wm_attributes('-alpha', 0.8)
     about_windows.wm_attributes('-topmost', True)
@@ -334,12 +392,12 @@ def get_about():
 
     about_text = LANGUAGE_LIST[language]['about']
 
-    text_label = tk.Label(about_windows, text=about_text, justify=tk.CENTER)
+    text_label = tk.Label(about_windows, text=about_text, justify=tk.CENTER, bg=theme, fg=theme_color)
     text_label.pack()
 
     support_image = tk.PhotoImage(file=r'.\images\support.png')
     support_image = support_image.subsample(2, 2)
-    support_label = tk.Label(about_windows, image=support_image)
+    support_label = tk.Label(about_windows, image=support_image, bg=theme, fg=theme_color)
     support_label.pack()
 
     about_windows.mainloop()
